@@ -1,0 +1,56 @@
+[tool.poetry]
+name = "esops"
+version = "0.1.0"
+description = "this is a hackathon project on eternal sunshine of the spotless premium system"
+authors = ["mustafaeskin <mustafa.samed.eskin@studocu.com>", "sasan <sasan.moridpour@studocu.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.9.18"
+numpy = "^2.0.0"
+
+[tool.poetry.group.dev.dependencies]
+mock = "^5.0.2"
+pytest = "^7.3.1"
+moto = "^4.1.8"
+notebook = "^6.5.4"
+pre-commit = "^3.3.1"
+toml = "^0.10.2"
+black = "^22.6.0"
+flake8 = "^6.1.0"
+pytest-cov = "^4.1.0"
+trio = "^0.23.1"
+httpx = "^0.25.2"
+importlib-resources = "^6.4.0"
+matplotlib = "^3.9.1"
+
+[[tool.poetry.source]]
+name = "studocu-internal"
+url = "https://studocu-179143349265.d.codeartifact.eu-west-1.amazonaws.com/pypi/studocu-internal/simple/"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "studocu-internal-release"
+url = "https://studocu-179143349265.d.codeartifact.eu-west-1.amazonaws.com/pypi/studocu-internal-release/simple/"
+priority = "supplemental"
+
+[[tool.poetry.source]]
+name = "pypi"
+priority = "supplemental"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ['tests/']
+env = [
+    "RUNENV=test"
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
+
+[tool.poetry.scripts]
+simulate = "esops.cli:experiment"

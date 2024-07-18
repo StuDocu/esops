@@ -1,0 +1,2 @@
+- increasing alpha and entropy helps with making the model more deterministic
+- temperature var didn't affect at all
