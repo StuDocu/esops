@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "3.9.18"
 numpy = "^2.0.0"
+pandas = "^2.2.2"
 
 [tool.poetry.group.dev.dependencies]
 mock = "^5.0.2"

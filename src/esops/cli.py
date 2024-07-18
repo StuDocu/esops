@@ -6,8 +6,11 @@ import click
 import numpy as np
 from matplotlib import pyplot as plt
 
-from esops.opt.agents import EpsilonGreedyQLearningAgent, SoftQLearningAgent
+from esops.opt.agents import SoftQLearningAgent, NonAgent
 from esops.envs import ConvertedRewardsEnv
+
+
+np.random.seed(0)
 
 
 class ExperimentContext:
@@ -78,6 +81,9 @@ def run_q_learning(context, num_items, num_choices, time_steps, alpha, gamma, ep
         gamma=gamma,
         epsilon=epsilon,
     )
+    # control_agent = NonAgent(
+    #     history=env.H[:, :-time_steps],
+    #     num_items=num_items, ts=time_steps)
 
     context.add_config(
         {
@@ -93,14 +99,61 @@ def run_q_learning(context, num_items, num_choices, time_steps, alpha, gamma, ep
 
     for t in range(1, time_steps):
         agent.step(env.R[:, t], num_choices)
+
     context.add_arrays(agent)
     context.add_sum_reward(env, agent)
 
-    plot = make_timeline_plot(env.M, agent.choices)
-    context.add_plot(plot, 'view.plot.png')
+    agent_view_plot = make_timeline_plot(env.M, agent.choices)
+    context.add_plot(agent_view_plot, 'view.plot.png')
 
-    plot = make_timeline_plot(env.R, agent.choices)
-    context.add_plot(plot, 'rewards.plot.png')
+    agent_reward_plot = make_timeline_plot(env.R, agent.choices)
+    context.add_plot(agent_reward_plot, 'rewards.plot.png')
+
+
+# @experiment.command()
+# @click.option('--course-id', type=int, default=4527748)
+# @click.option('--seed', type=int, default=12)
+# @click.option("--num-choices", type=int, default=2)
+# @click.option("--alpha", type=float, default=0.1)
+# @click.option("--gamma", type=float, default=0.9)
+# @click.option("--epsilon", type=float, default=0.1)
+# @click.pass_obj
+# def run_q_learning_init(context, course_id, seed, num_choices, alpha, gamma, epsilon):
+#     """
+#     poetry run simulate --name 'rl-experiment-baseline' run --alpha 0.1 --num-items 8 --num-choices=2 --time-steps 50
+#     """
+#     click.echo(F"Experiment ID: {context.name}")
+#     env = RealViewsConvertedRewardsEnv(course_id=course_id, seed=seed)
+#     agent = SoftQLearningAgent(
+#         ts=env.ts,
+#         num_items=env.num_items,
+#         alpha=alpha,
+#         gamma=gamma,
+#         epsilon=epsilon,
+#     )
+#
+#     context.add_config(
+#         {
+#             'agent': agent.name,
+#             'num_items': env.num_items,
+#             'num_choices': num_choices,
+#             'time_steps': env.ts,
+#             'alpha': alpha,
+#             'gamma': gamma,
+#             'epsilon': epsilon,
+#         }
+#     )
+#
+#     for t in range(1, env.ts):
+#         agent.step(env.R[:, t], num_choices)
+#     context.add_arrays(agent)
+#     context.add_sum_reward(env, agent)
+#
+#     plot = make_timeline_plot(env.M, agent.choices)
+#     context.add_plot(plot, 'view.plot.png')
+#
+#     plot = make_timeline_plot(env.R, agent.choices)
+#     context.add_plot(plot, 'rewards.plot.png')
 
 
 def make_timeline_plot(rewards, choices):

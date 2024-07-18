@@ -50,6 +50,40 @@ class BaseAgent(ABC):
         return softmax_probs
 
 
+class NonAgent(BaseAgent):
+    name = 'existing-approach'
+
+    def __init__(self, ts, num_items, history):
+        super().__init__(ts, num_items)
+        self.history = history
+        arr = np.sum(history, axis=1)
+        sorted_indices = np.argsort(arr, )[::-1]
+        sorted_arr = arr[sorted_indices]
+        total_sum = np.sum(sorted_arr)
+        threshold = 0.6 * total_sum
+        cum_sum = np.cumsum(sorted_arr)
+        choices = []
+        for i in range(5):
+            if cum_sum[i] < threshold:
+                choices.append(int(i))
+            else:
+                choices.append(int(i))
+                break
+
+        self.choice = sorted_indices[choices].tolist()  # static
+
+    def step(self, rewards, n):
+        self.hist.append(rewards)
+        self.choices.append(self.choice)
+        return self.choice
+
+    def selection_policy(self, *args, **kwargs):
+        pass
+
+    def update_policy(self, *args, **kwargs):
+        pass
+
+
 class GreedyRandomizedRLAgent(BaseAgent):
     """
     Naive Reinforcement Learning Agent, that uses softmax selection policy.
