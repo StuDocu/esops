@@ -3,19 +3,20 @@ from dataclasses import field
 
 import numpy as np
 
-
-np.random.seed(12)
+from esops.utils import temporary_seed
 
 
 @dataclass
 class BaseEnv:
+    seed: int
     num_items: int
     ts: int
     low: int = field(init=True, default=0)
     high: int = field(init=True, default=1000)
 
     def __post_init__(self):
-        self.M = self._generate_env()
+        with temporary_seed(self.seed):
+            self.M = self._generate_env()
 
     def _generate_env(self):
         init = np.random.randint(1, 1000, size=self.num_items)  # generate random steps for all items and ts
@@ -25,11 +26,20 @@ class BaseEnv:
         matrix = np.maximum(matrix, 0)  # make sure no negatives
         return matrix
 
+    def save_matrix(self, path):
+        with open(path, "wb") as f:
+            np.save(f, self.M)
+
+    @staticmethod
+    def load_matrix(path):
+        with open(path, "rb") as f:
+            return np.load(f)
+
 
 class ConvertedRewardsEnv(BaseEnv):
 
-    def __init__(self, num_items, ts, low: int = 0, high: int = 1000):
-        super().__init__(num_items, ts, low, high)
+    def __init__(self, seed, num_items, ts, low: int = 0, high: int = 1000):
+        super().__init__(seed, num_items, ts, low, high)
         self.cr = self._generate_conversion_rates(low=0.005, high=0.02, random_scale=0.0005)
         self.R = (self.M * self.cr).astype(int)  # converted views
 

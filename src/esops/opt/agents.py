@@ -6,9 +6,6 @@ from typing import Union
 import numpy as np
 
 
-np.seterr(divide='ignore')
-
-
 @dataclass
 class BaseAgent(ABC):
     ts: int
