@@ -81,6 +81,91 @@ class NonAgent(BaseAgent):
         pass
 
 
+class QLearningAgent(BaseAgent, ABC):
+    name = 'q-learning-rl'
+
+    def __init__(self,
+                 ts: int,
+                 num_items: int,
+                 init_q_values: Union[list, np.ndarray] = None,
+                 alpha: float = 0.1,
+                 gamma: float = 0.9,
+                 epsilon: float = 0.1
+                 ):
+        super().__init__(ts, num_items)
+        self.alpha = alpha  # learning rate
+        self.gamma = gamma  # discount factor
+        self.epsilon = epsilon  # exploration rate
+        self.updated_q_values = []
+        self.q_values = self._set_init_q_values(init_q_values)  # initialize q-values
+
+    def _set_init_q_values(self, init_q_values):
+        if init_q_values is None:
+            return np.zeros(self.num_items)
+        return init_q_values
+
+    def step(self, rewards: Union[list, np.ndarray], n: int):
+        """
+        Selects n items based on the rewards and updates the Q-values.
+        Parameters
+        ----------
+        rewards: list or np.ndarray
+        n: int
+        """
+        if len(self.hist) > 0:
+            self.update_policy(rewards)
+        self.hist.append(rewards)
+        choices = self.selection_policy(n)
+        self.choices.append(choices.tolist())
+        return self.choices[-1]
+
+    @abstractmethod
+    def selection_policy(self, *args, **kwargs):
+        pass
+
+    def _update_q_values(self, rewards: Union[list, np.ndarray], choices: list):
+        """
+        Update Q-values based on the received rewards
+        """
+        for idx in choices:
+            # update rule: Q(s) = Q(s) + alpha * (reward + gamma * max(Q(s')) - Q(s))
+            self.q_values[idx] += self.alpha * (rewards[idx] - self.q_values[idx])
+
+    def update_policy(self, rewards: Union[list, np.ndarray]):
+        self._update_q_values(rewards, self.choices[-1])
+        self.updated_q_values.append(self.q_values.copy())
+
+
+class EpsilonGreedyQLearningAgent(QLearningAgent):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def selection_policy(self, n):
+        """
+        Epsilon-greedy policy for selecting items
+        """
+        if np.random.rand() < self.epsilon:
+            # Exploration: randomly select items
+            return np.random.choice(self.num_items, n, replace=False)
+        else:
+            # Exploitation: select items with the highest Q-values
+            return np.argsort(self.q_values)[-n:]
+
+
+class SMQLearningAgent(QLearningAgent):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def selection_policy(self, n, temperature=0.1):
+        """
+        Softmax selection policy for selecting items
+        """
+        exp_q_values = self.softmax(self.q_values * temperature)
+        probas = exp_q_values / exp_q_values.sum()
+        return np.random.choice(len(self.q_values), n, replace=False, p=probas)
+
+
+
 class GreedyRandomizedRLAgent(BaseAgent):
     """
     Naive Reinforcement Learning Agent, that uses softmax selection policy.
@@ -238,81 +323,3 @@ class ExtEpsilonRLAgent(BaseAgent):
         last_values = _hist[:, -1]
         extrapolations = means + phi * (last_values - means)
         return extrapolations
-
-
-class QLearningAgent(BaseAgent, ABC):
-    name = 'q-learning-rl'
-
-    def __init__(self,
-                 ts: int,
-                 num_items: int,
-                 alpha: float = 0.1,
-                 gamma: float = 0.9,
-                 epsilon: float = 0.1
-                 ):
-        super().__init__(ts, num_items)
-        self.alpha = alpha  # learning rate
-        self.gamma = gamma  # discount factor
-        self.epsilon = epsilon  # exploration rate
-        self.updated_q_values = []
-        self.q_values = np.zeros(num_items)  # initialize q-values
-
-    def step(self, rewards: Union[list, np.ndarray], n: int):
-        """
-        Selects n items based on the rewards and updates the Q-values.
-        Parameters
-        ----------
-        rewards: list or np.ndarray
-        n: int
-        """
-        if len(self.hist) > 0:
-            self.update_policy(rewards)
-        self.hist.append(rewards)
-        choices = self.selection_policy(n)
-        self.choices.append(choices.tolist())
-        return self.choices[-1]
-
-    @abstractmethod
-    def selection_policy(self, *args, **kwargs):
-        pass
-
-    def _update_q_values(self, rewards: Union[list, np.ndarray], choices: list):
-        """
-        Update Q-values based on the received rewards
-        """
-        for idx in choices:
-            # update rule: Q(s) = Q(s) + alpha * (reward + gamma * max(Q(s')) - Q(s))
-            self.q_values[idx] += self.alpha * (rewards[idx] - self.q_values[idx])
-
-    def update_policy(self, rewards: Union[list, np.ndarray]):
-        self._update_q_values(rewards, self.choices[-1])
-        self.updated_q_values.append(self.q_values.copy())
-
-
-class EpsilonGreedyQLearningAgent(QLearningAgent):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def selection_policy(self, n):
-        """
-        Epsilon-greedy policy for selecting items
-        """
-        if np.random.rand() < self.epsilon:
-            # Exploration: randomly select items
-            return np.random.choice(self.num_items, n, replace=False)
-        else:
-            # Exploitation: select items with the highest Q-values
-            return np.argsort(self.q_values)[-n:]
-
-
-class SoftQLearningAgent(QLearningAgent):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def selection_policy(self, n):
-        """
-        Softmax selection policy for selecting items
-        """
-        exp_q_values = self.softmax(self.q_values)
-        probas = exp_q_values / exp_q_values.sum()
-        return np.random.choice(len(self.q_values), n, replace=False, p=probas)
