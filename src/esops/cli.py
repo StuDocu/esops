@@ -83,27 +83,26 @@ def experiment(context, seed, name):
 @click.option("--num-items", type=int, default=20)
 @click.option("--time-span", type=int, default=15)
 @click.option("--history-span", type=int, default=3000)
+@click.option("--low", type=int, default=0)
+@click.option("--high", type=int, default=10)
 @click.option("--alpha", type=float, default=0.1)
 @click.option("--gamma", type=float, default=0.9)
 @click.option("--epsilon", type=float, default=0.1)
 @click.pass_obj
-def run_q_learning(context, num_items, time_span, history_span, alpha, gamma, epsilon):
+def run_q_learning(context, num_items, time_span, low, high, history_span, alpha, gamma, epsilon):
     """
     poetry run simulate --seed 128 run-q-learning --alpha 0.01 --gamma 0.5 --epsilon 0.1
-
-    Parameters
-    ----------
-    context: ExperimentContext
-    num_items: int
-    time_span: int
-    history_span: int
-    alpha: float
-    gamma: float
-    epsilon: float
     """
     click.echo(F"seed-id: seed={context.seed}")
     click.echo(F"run-id: run={context.id}")
-    env = ConvertedRewardsEnv(seed=context.seed, num_items=num_items, time_span=time_span, history_span=history_span)
+    env = ConvertedRewardsEnv(
+        seed=context.seed,
+        num_items=num_items,
+        time_span=time_span,
+        history_span=history_span,
+        low=low,
+        high=high,
+    )
     control_agent = NonAgent(num_items=num_items, ts=time_span, history=env.H[:, :-time_span])
     num_choices = len(control_agent.choice)
 
