@@ -1,0 +1,10 @@
+{
+    "agent": "q-learning-rl",
+    "num_items": 30,
+    "num_choices": 5,
+    "time_span": 15,
+    "history_span": 3000,
+    "alpha": 0.01,
+    "gamma": 0.1,
+    "epsilon": 0.1
+}
