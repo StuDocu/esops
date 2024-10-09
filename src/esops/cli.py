@@ -5,7 +5,7 @@ import uuid
 import click
 import numpy as np
 
-from esops.opt.agents import SMQLearningAgent, NonAgent
+from esops.agents.ql import SMQLearningAgent, NonAgent
 from esops.envs import ConvertedRewardsEnv
 from esops.utils import make_timeline_plot
 
