@@ -27,11 +27,16 @@ class ExperimentContext:
     def __init__(self, seed, name: str = None):
         self.name = name
         self.seed = seed
+        self.id = None
+        self.path = None
+        if name is not None:
+            self.setup(name, seed)
+
+    def setup(self, name, seed):
+        self.seed = seed
+        self.name = name
         self.id: str = uuid.uuid4().hex[:16]
-
         self.path = f"./experiments/seed={self.seed}/{self.name}/run={self.id}"
-
-    def setup(self):
         os.makedirs(self.path, exist_ok=True)
 
     def add_config(self, config: dict):
@@ -75,7 +80,6 @@ class ExperimentContext:
 @click.pass_context
 def experiment(context, seed, name):
     xp = ExperimentContext(seed=seed, name=name)
-    xp.setup()
     context.obj = xp
 
 
@@ -144,6 +148,38 @@ def run_q_learning(context, num_items, time_span, low, high, history_span, alpha
 
     agent_reward_plot = make_timeline_plot(env.R, agent.choices)
     context.add_plot(agent_reward_plot, 'rewards.plot.png')
+
+
+@experiment.command()
+@click.option("--num-runs", type=int, default=10)
+@click.option("--num-items", type=int, default=20)
+@click.option("--time-span", type=int, default=15)
+@click.option("--history-span", type=int, default=3000)
+@click.option("--low", type=int, default=0)
+@click.option("--high", type=int, default=10)
+@click.option("--alpha", type=float, default=0.1)
+@click.option("--gamma", type=float, default=0.9)
+@click.option("--epsilon", type=float, default=0.1)
+@click.pass_obj
+@click.pass_context
+def run_simulation(ctx, context, num_runs, num_items, time_span, low, high, history_span, alpha, gamma, epsilon):
+    """
+    poetry run experiment --seed 48 run-simulation
+    """
+    name = f"n={num_items}-t={time_span}-h={history_span}-a={alpha}-g={gamma}-e={epsilon}-low={low}-high={high}"
+    for i in range(num_runs):
+        context.setup(seed=context.seed, name=name)
+        ctx.invoke(
+            run_q_learning,
+            num_items=num_items,
+            time_span=time_span,
+            low=low,
+            high=high,
+            history_span=history_span,
+            alpha=alpha,
+            gamma=gamma,
+            epsilon=epsilon,
+        )
 
 
 if __name__ == "__main__":

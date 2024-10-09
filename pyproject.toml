@@ -54,4 +54,4 @@ line-length = 120
 target-version = ['py39']
 
 [tool.poetry.scripts]
-simulate = "esops.cli:experiment"
+experiment = "esops.cli:experiment"
