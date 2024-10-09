@@ -165,7 +165,6 @@ class SMQLearningAgent(QLearningAgent):
         return np.random.choice(len(self.q_values), n, replace=False, p=probas)
 
 
-
 class GreedyRandomizedRLAgent(BaseAgent):
     """
     Naive Reinforcement Learning Agent, that uses softmax selection policy.

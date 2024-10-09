@@ -146,8 +146,5 @@ def run_q_learning(context, num_items, time_span, low, high, history_span, alpha
     context.add_plot(agent_reward_plot, 'rewards.plot.png')
 
 
-
-
-
 if __name__ == "__main__":
     experiment()
